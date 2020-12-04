@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% block content %}
+<form method="POST" action="">
+    <div class="content-section">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Start you Test</legend>
+            <div class="form-group">
+                {{ form.title.label(class="form-control-label") }}
+                {% if form.title.errors %}
+                    {{ form.title(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.title(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.description.label(class="form-control-label") }}
+                {% if form.description.errors %}
+                    {{ form.description(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.description(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.iteration.label(class="form-control-label") }}
+                {% if form.iteration.errors %}
+                    {{ form.iteration(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.iteration.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.iteration(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-check">
+                {{ form.ch1(class="form-check-input") }}
+                {{ form.ch1.label(class="form-check-label") }}
+            </div>
+            <div class="form-check">
+                {{ form.ch2(class="form-check-input") }}
+                {{ form.ch2.label(class="form-check-label") }}
+            </div>
+            <div class="form-check">
+                {{ form.ch3(class="form-check-input") }}
+                {{ form.ch3.label(class="form-check-label") }}
+            </div>
+            <div class="form-check">
+                {{ form.ch4(class="form-check-input") }}
+                {{ form.ch4.label(class="form-check-label") }}
+            </div>
+        </fieldset>
+    </div>
+{% endblock content %}
+
+{% block sidebar %}
+    {% if device %}
+        <div class="content-section">
+            <fieldset class="form-group">
+                <div class="form-group">
+                    {{ form.start(class="btn btn-success btn-lg btn-block") }}
+                </div>
+                <div class="form-group">
+                    {{ form.stop(class="btn btn-danger btn-lg btn-block") }}
+                </div>
+            </fieldset>
+            <div class="progress" id="progress" style="display: none">
+                <div class="progress-bar progress-bar-striped bg-steel progress-bar-animated" id="prg" role="progressbar" style="width: 50%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    {% else %}
+        <div class="content-section">
+            <h3>Please try connecting again or Check for errors</h3>
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.connect(class="btn btn-info btn-lg btn-block") }}
+            </div>
+        </div>
+</form>
+    {% endif %}
+    <script>
+        const progress = document.getElementById("progress")
+        const prg = document.getElementById("prg")
+        const start = document.getElementById("start")
+        const stop = document.getElementById("stop")
+        stop.disabled = true
+
+        function disabler(first, second){
+            start.disabled = first
+            stop.disabled = second
+        }
+        start.onclick = () => {
+            progress.disabled = false
+            prg.ariaValuemax = {{ form.iteration.value }}
+            disabler(true, false)
+            var source = new EventSource("{{ url_for('sse.stream') }}");
+            source.addEventListener('publish', event => {
+                let data = JSON.parse(event.data)
+                prg.ariaValuenow = data.message.toString()
+            }, false)
+            source.addEventListener('error', () => {
+                alert("Failed to connect to event stream. Is Redis running?");
+            }, false)
+        }
+    </script>
+{% endblock sidebar %}

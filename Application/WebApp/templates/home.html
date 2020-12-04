@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block content %}
+    <main role="main" class="inner cover">
+        <h1 class="cover-heading">Welcome</h1>
+        {% if test %}
+            <p class="lead">Total tests Conducted: <span>{{ test|length }}</span> Last Test was Conducted on <span>{{ test[-1].moment | tojson | safe}}</span></p>
+        {% else%}
+            <p class="lead">Please Sign In or Sign Up to access the Functionality</p>
+        {% endif %}
+    </main>
+{% endblock content %}

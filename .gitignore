@@ -1,0 +1,5 @@
+# Default ignored files
+/results/
+/Application/__pycache__/
+/Application/WebApp/__pycache__/
+.idea

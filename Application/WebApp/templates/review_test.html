@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% block content %}
+    <form method="POST" action="">
+        {{ form.csrf_token }}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Choose test Case</h5>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <div class="form-group">
+                            {{ form.tests(class="custom-select mr-sm-2") }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="form-group">
+                            {{ form.title.label(class="form-control-label") }}
+                            {% if form.title.errors %}
+                                {{ form.title(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.title.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.title(class="form-control form-control-lg") }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.description.label(class="form-control-label") }}
+                            {% if form.description.errors %}
+                                {{ form.description(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.description.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.description(class="form-control form-control-lg") }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-outline-info") }}
+                            <button id="deleted" type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteModal">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p id="deleteModalLabel">Are you sure you want to delete this test?</p>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-footer">
+                        {{ form.delete(class="btn btn-danger") }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card text-center mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Traces</h5>
+            <div class="row mb-3">
+
+                <div class="col-sm-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Files</h5>
+                            <select multiple class="form-control" id="test_select"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Channels</h5>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="ch1">
+                                <label class="form-check-label" for="exampleCheck1">Channel 1</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="ch2">
+                                <label class="form-check-label" for="exampleCheck1">Channel 2</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="ch3">
+                                <label class="form-check-label" for="exampleCheck1">Channel 3</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="ch4">
+                                <label class="form-check-label" for="exampleCheck1">Channel 4</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block sidebar %}
+    <div class="content-section" id="side_panel">
+        <h3>Info</h3>
+        <p class='text-muted'>The last Capture was caught on <span id="timing"></span></p>
+        <a class="btn btn-outline-dark btn-sm" id="downloaded">Download</a>
+    </div>
+    <script src="https://www.chartjs.org/dist/2.9.3/Chart.min.js"></script>
+    <script src="https://www.chartjs.org/samples/latest/utils.js"></script>
+{% endblock %}
+
+{% block graph %}
+    <div class="card mb-3" id="card" style="display: none">
+        <div class="card-body">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+    <script type="text/javascript">
+        const test = JSON.parse('{{ test | tojson | safe}}');
+    </script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/chartConfig.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
