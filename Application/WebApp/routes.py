@@ -5,8 +5,8 @@ import threading
 from zipfile import ZipFile
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, send_from_directory, abort
-from flask_sse import sse
-from WebApp import app, db, bcrypt  # , mail
+from flask_socketio import emit
+from WebApp import app, db, bcrypt, socketio  # , mail
 from WebApp.models import User, Test
 from WebApp.forms import RegistrationForm, LoginForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm, \
     StartTestForm, ReviewTestForm
@@ -14,10 +14,8 @@ from flask_login import login_user, current_user, logout_user, login_required
 from mock import ScopeManager
 from scaling import scale
 
+
 # from flask_mail import Message
-
-app.register_blueprint(sse, url_prefix='/stream')
-
 
 @app.route("/")
 @app.route("/home")
@@ -141,53 +139,46 @@ def reset_token(token):
 
 def connect():
     try:
+        global device
         device = ScopeManager()
-        return device
     except:
         return None
 
 
-def capture(device, form):
-    try:
-        global stop_threads
-        device.set_title(form.title.data)
-        device.set_channel(form.iteration.data)
-        device.initialize()
-        for i in range():
-            device.reinitialize()
-            device.acquire()
-            sse.publish({"message": i}, type='publish')
-            if stop_threads:
-                break
-        data = Test(title=form.title.data, description=form.description.data, iteration=form.iteration.data,
-                    ch1=form.ch1.data, ch2=form.ch2.data, ch3=form.ch3.data, ch4=form.ch4.data,
-                    author=current_user)
-        db.session.add(data)
-        db.session.commit()
-        device.close()
-        scale(form.title.data)
-        flash('Successfully conducted the test!', 'success')
-        return redirect(url_for('review_test'))
-    except:
+@socketio.on('form')
+def capture(form):
+    form = json.loads(form)
+    print(form)
+    if form["start"]:
+        try:
+            device.set_title(form.title.data)
+            device.set_channel(form.iteration.data)
+            device.initialize()
+            for i in range():
+                device.reinitialize()
+                device.acquire()
+                emit('result', {'itr': i})
+            data = Test(title=form.title.data, description=form.description.data, iteration=form.iteration.data,
+                        ch1=form.ch1.data, ch2=form.ch2.data, ch3=form.ch3.data, ch4=form.ch4.data,
+                        author=current_user)
+            db.session.add(data)
+            db.session.commit()
+            device.close()
+            flash('Successfully conducted the test!', 'success')
+            return redirect(url_for('review_test'))
+        except:
+            flash('Encountered an error during capture!', 'danger')
+    elif form["stop"]:
         flash('Encountered an error during capture!', 'danger')
 
 
 @app.route("/start", methods=['GET', 'POST'])
 @login_required
 def start():
-    device = connect()
+    connect()
     form = StartTestForm()
-    if device:
-        if form.start.data and form.validate():
-            stop_threads = False
-            t = threading.Thread(target=capture, args=[device, form.iteration.data])
-            t.start()
-        elif form.stop.data:
-            stop_threads = True
-            t.join()
-            flash('Encountered an error during capture!', 'danger')
-    elif form.connect.data:
-        device = connect()
+    if form.connect.data:
+        connect()
         if device:
             flash('Successfully connected!', 'success')
             return redirect(url_for('start'))
