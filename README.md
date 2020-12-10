@@ -13,7 +13,8 @@ is later handle by a webservice client running the control dashboard, all done o
  Since Raspberry Pi supports python natively and python being a very flexible open source language, also due to its huge
  user base which could help query out issues later in the future.
  - **Web Service:** 
-   - _Framework:_ Flask 
+   - _Framework:_ Flask, Socket_IO
+   - _Server:_ eventlet
    - _Database_: SQLite
  - **Oscilloscope Communication Service:**
    - _Library:_ VISA(pyvisa)
