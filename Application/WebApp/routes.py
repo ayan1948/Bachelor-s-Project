@@ -145,31 +145,36 @@ def connect():
         return None
 
 
+@socketio.on('connection')
+def response(initial):
+    print(initial['data'])
+
+
 @socketio.on('form')
 def capture(form):
     form = json.loads(form)
     print(form)
     if form["start"]:
         try:
-            device.set_title(form.title.data)
-            device.set_channel(form.iteration.data)
+            device.set_title(form["title"])
+            device.set_channel([form["ch1"], form["ch2"], form["ch3"], form["ch4"]])
             device.initialize()
-            for i in range():
+            for i in range(form["iterations"]):
                 device.reinitialize()
                 device.acquire()
-                emit('result', {'itr': i})
-            data = Test(title=form.title.data, description=form.description.data, iteration=form.iteration.data,
-                        ch1=form.ch1.data, ch2=form.ch2.data, ch3=form.ch3.data, ch4=form.ch4.data,
+                emit('result', {'range': i})
+            data = Test(title=form["title"], description=form["description"], iteration=form["iterations"],
+                        ch1=form["ch1"], ch2=form["ch2"], ch3=form["ch3"], ch4=form["ch4"],
                         author=current_user)
             db.session.add(data)
             db.session.commit()
             device.close()
-            flash('Successfully conducted the test!', 'success')
-            return redirect(url_for('review_test'))
+            scale(form["title"])
+            emit('redirect', {'destination': '/review'})
         except:
-            flash('Encountered an error during capture!', 'danger')
+            emit('status', {'status': 'danger'})
     elif form["stop"]:
-        flash('Encountered an error during capture!', 'danger')
+        emit('status', {'status': 'warning'})
 
 
 @app.route("/start", methods=['GET', 'POST'])
@@ -250,10 +255,15 @@ def review_test():
         return redirect(url_for('review_test'))
     elif form.delete.data:
         test = Test.query.get_or_404(int(form.tests.data))
-        db.session.delete(test)
-        db.session.commit()
-        flash('Your Test has successfully been deleted!', 'warning')
-        return redirect(url_for('review_test'))
+        try:
+            directory = os.getcwd().replace("Application", "results")
+            os.rmdir(os.path.join(directory, f"{form.title.data}"))
+            os.rmdir(os.path.join(directory, f"/computer_{form.title.data}"))
+        finally:
+            db.session.delete(test)
+            db.session.commit()
+            flash('Your Test has successfully been deleted!', 'warning')
+            return redirect(url_for('review_test'))
     return render_template('review_test.html', title='review_test', form=form, test=dic)
 
 

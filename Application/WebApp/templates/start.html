@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
+    <div id="alert" role="alert" style="display: none">
+
+    </div>
     <form onsubmit="return false;">
         <div class="content-section">
             <fieldset class="form-group">
@@ -67,65 +70,83 @@
 {% endblock content %}
 
 {% block sidebar %}
-    <div class="content-section" id="progress" style="display: none">
+    <div class="content-section" id="progress">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-steel progress-bar-animated" id="prg" role="progressbar" style="width: 50%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar progress-bar-striped bg-steel progress-bar-animated" id="prg" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
         </div>
-        <p class='text-muted'>Estimated time: <span id="timing"></span></p>
+        <p class='text-muted'>Captures: <span id="timing"></span></p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script>
-        document.addEventListener('DomContentLoaded', () =>{
+        const socket = io()
+        socket.on('connect', function() {
+            socket.emit('connection', {data: 'I am connected!'});
+        });
 
-            const socket = io()
-            socket.on('connect', function() {
-                socket.emit('my event', {data: 'I\'m connected!'});
-            });
+        var form = {}
 
-            let title = document.getElementById("title");
-            let description = document.getElementById("description");
-            let iterations = document.getElementById("iteration");
-            let channels = document.querySelectorAll("input[type='checkbox']");
-            let start = document.getElementById("start")
-            let pause = document.getElementById("stop")
-            const progress = document.getElementById("progress")
-            let prg = document.getElementById("prg")
-            pause.disabled = true
+        let title = document.getElementById("title");
+        let description = document.getElementById("description");
+        let iterations = document.getElementById("iteration");
+        let channels = document.querySelectorAll("input[type='checkbox']");
+        let start = document.getElementById("start")
+        let pause = document.getElementById("stop")
+        const progress = document.getElementById("progress")
+        let prg = document.getElementById("prg")
+        let alert = document.getElementById("alert")
+        let timing = document.getElementById("timing")
+        pause.disabled = true
+        progress.style.display = "none"
 
-            function disabler(first, second, third){
-                start.disabled = first
-                pause.disabled = second
-                progress.disabled = third
-            }
+        function disabler(first, second, third=""){
+            start.disabled = first
+            pause.disabled = second
+            progress.style.display = third
+        }
+        function alertHandler(display='none', type="", content=""){
+            alert.style.display = display
+            alert.className="alert alert-dismissible fade show " + type
+            alert.textContent = content
+        }
 
-            start.onclick = () => {
-                var form = {
-                    title: title.value,
-                    description: description.value,
-                    iterations: iterations.value,
-                    ch1: channels[0].checked,
-                    ch2: channels[1].checked,
-                    ch3: channels[2].checked,
-                    ch4: channels[3].checked
-                }
-                prg.ariaValuemax = document.getElementById("iteration").value
-                //disabler(true, false, false)
-                form.start = true
-                form.false = false
-                socket.emit('form', JSON.stringify(form))
-            }
+        start.onclick = () => {
+            alertHandler()
+            form['title'] = title.value
+            form['description'] = description.value
+            form['iterations'] = parseInt(iterations.value)
+            form['ch1'] = channels[0].checked
+            form['ch2'] = channels[1].checked
+            form['ch3'] = channels[2].checked
+            form['ch4'] = channels[3].checked
+            disabler(true, false)
+            form['start'] = true
+            form['stop'] = false
+            socket.emit('form', JSON.stringify(form))
+        }
 
-            pause.onclick = () => {
-                var form = {}
-                disabler(false, true, true)
-                form.start = false
-                form.false = true
-                socket.emit('form', JSON.stringify(form))
-            }
+        pause.onclick = () => {
+            alertHandler()
+            var form = {}
+            disabler(false, true, "none")
+            form.start = false
+            form.stop = true
+            socket.emit('form', JSON.stringify(form))
+        }
 
-            socket.on('result', (results) => {
-                prg.ariaValuenow = results.itr
-            })
+        socket.on('result', data => {
+            let value = (data.range/iterations.value)*100
+            prg.style.width= value.toString() +"%"
+            timing.textContent = (data.range/iterations.value).toString()
         })
+
+        socket.on('status', result => {
+            if (result.status === "danger")
+                alertHandler("" ,"alert-danger", "There is something Wrong with the Device!")
+            else
+                alertHandler("" ,"alert-warning", "Stopped!")
+        })
+        socket.on('redirect', link => {
+            window.location.href = link.destination
+        });
     </script>
 {% endblock sidebar %}
