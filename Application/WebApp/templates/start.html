@@ -3,58 +3,59 @@
     <div id="alert" role="alert" style="display: none">
 
     </div>
-    <form onsubmit="return false;">
-        <div class="content-section">
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Start your Test</legend>
-                <div class="form-group">
-                    {{ form.title.label(class="form-control-label") }}
-                    {% if form.title.errors %}
-                        {{ form.title(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.title.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.title(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {{ form.description.label(class="form-control-label") }}
-                    {% if form.description.errors %}
-                        {{ form.description(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.description.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.description(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="form-control-label" for="iteration" type="number">Iterations</label>
-                    <input class="form-control form-control-lg" id="iteration" name="iteration" required="" type="number" value="">
-                </div>
-                <div class="form-check">
-                    {{ form.ch1(class="form-check-input") }}
-                    {{ form.ch1.label(class="form-check-label") }}
-                </div>
-                <div class="form-check">
-                    {{ form.ch2(class="form-check-input") }}
-                    {{ form.ch2.label(class="form-check-label") }}
-                </div>
-                <div class="form-check">
-                    {{ form.ch3(class="form-check-input") }}
-                    {{ form.ch3.label(class="form-check-label") }}
-                </div>
-                <div class="form-check">
-                    {{ form.ch4(class="form-check-input") }}
-                    {{ form.ch4.label(class="form-check-label") }}
-                </div>
-            </fieldset>
+    <div class="content-section">
+        <form onsubmit="return false;">
             {% if device %}
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">Start your Test</legend>
+                    <div class="form-group">
+                        {{ form.title.label(class="form-control-label") }}
+                        {% if form.title.errors %}
+                            {{ form.title(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.title(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.description.label(class="form-control-label") }}
+                        {% if form.description.errors %}
+                            {{ form.description(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.description(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label" for="iteration" type="number">Iterations</label>
+                        <input class="form-control form-control-lg" id="iteration" name="iteration" required="" type="number" value="">
+                    </div>
+                    <div class="form-check">
+                        {{ form.ch1(class="form-check-input") }}
+                        {{ form.ch1.label(class="form-check-label") }}
+                    </div>
+                    <div class="form-check">
+                        {{ form.ch2(class="form-check-input") }}
+                        {{ form.ch2.label(class="form-check-label") }}
+                    </div>
+                    <div class="form-check">
+                        {{ form.ch3(class="form-check-input") }}
+                        {{ form.ch3.label(class="form-check-label") }}
+                    </div>
+                    <div class="form-check">
+                        {{ form.ch4(class="form-check-input") }}
+                        {{ form.ch4.label(class="form-check-label") }}
+                    </div>
+                </fieldset>
+
                 <div class="form-group">
                     {{ form.start(class="btn btn-success") }}
                     {{ form.stop(class="btn btn-danger") }}
@@ -65,8 +66,8 @@
                     {{ form.connect(class="btn btn-info") }}
                 </div>      
             {% endif %}
-        </div>
-    </form>
+        </form>
+    </div>
 {% endblock content %}
 
 {% block sidebar %}
@@ -83,19 +84,11 @@
             socket.emit('connection', {data: 'I am connected!'});
         });
 
-        var form = {}
 
-        let title = document.getElementById("title");
-        let description = document.getElementById("description");
-        let iterations = document.getElementById("iteration");
-        let channels = document.querySelectorAll("input[type='checkbox']");
-        let start = document.getElementById("start")
-        let pause = document.getElementById("stop")
         const progress = document.getElementById("progress")
         let prg = document.getElementById("prg")
         let alert = document.getElementById("alert")
         let timing = document.getElementById("timing")
-        pause.disabled = true
         progress.style.display = "none"
 
         function disabler(first, second, third=""){
@@ -109,7 +102,17 @@
             alert.textContent = content
         }
 
-        start.onclick = () => {
+        var form = {}
+        {% if device %}
+            let title = document.getElementById("title");
+            let description = document.getElementById("description");
+            let iterations = document.getElementById("iteration");
+            let channels = document.querySelectorAll("input[type='checkbox']");
+            let start = document.getElementById("start")
+            let pause = document.getElementById("stop")
+            pause.disabled = true
+
+            start.onclick = () => {
             alertHandler()
             form['title'] = title.value
             form['description'] = description.value
@@ -122,21 +125,31 @@
             form['start'] = true
             form['stop'] = false
             socket.emit('form', JSON.stringify(form))
-        }
+            }
 
-        pause.onclick = () => {
-            alertHandler()
-            var form = {}
-            disabler(false, true, "none")
-            form.start = false
-            form.stop = true
-            socket.emit('form', JSON.stringify(form))
-        }
+            pause.onclick = () => {
+                alertHandler()
+                {#var form = {}#}
+                disabler(false, true, "none")
+                form.start = false
+                form.stop = true
+                socket.emit('form', JSON.stringify(form))
+            }
+        {% else %}
+            let connect = document.getElementById("connect")
+
+            connect.onclick = () =>{
+                form['connect'] = true
+                form['start'] = false
+                form['stop'] = false
+                socket.emit('form', JSON.stringify(form))
+            }
+        {% endif %}
 
         socket.on('result', data => {
-            let value = (data.range/iterations.value)*100
+            let value = (data['range']/parseInt(iterations.value))*100
             prg.style.width= value.toString() +"%"
-            timing.textContent = (data.range/iterations.value).toString()
+            timing.textContent = (data['range']/parseInt(iterations.value)).toString()
         })
 
         socket.on('status', result => {
@@ -147,6 +160,6 @@
         })
         socket.on('redirect', link => {
             window.location.href = link.destination
-        });
+        })
     </script>
 {% endblock sidebar %}

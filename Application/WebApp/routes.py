@@ -1,7 +1,7 @@
 import os
 import secrets
 import json
-import threading
+import multiprocessing
 from zipfile import ZipFile
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, send_from_directory, abort
@@ -138,11 +138,11 @@ def reset_token(token):
 
 
 def connect():
+    global device
     try:
-        global device
         device = ScopeManager()
     except:
-        return None
+        device = False
 
 
 @socketio.on('connection')
@@ -175,6 +175,12 @@ def capture(form):
             emit('status', {'status': 'danger'})
     elif form["stop"]:
         emit('status', {'status': 'warning'})
+    elif form["connect"]:
+        connect()
+        if device:
+            emit('redirect', {'destination': '/start'})
+        else:
+            emit('status', {'status': 'danger'})
 
 
 @app.route("/start", methods=['GET', 'POST'])
@@ -182,13 +188,6 @@ def capture(form):
 def start():
     connect()
     form = StartTestForm()
-    if form.connect.data:
-        connect()
-        if device:
-            flash('Successfully connected!', 'success')
-            return redirect(url_for('start'))
-        else:
-            flash('Failed to connect!', 'danger')
     return render_template('start.html', title='start', form=form, device=device)
 
 

@@ -23,8 +23,6 @@ libraries which are engulfed or could be downloaded along side with the framewor
 - **Pillow:** `pip install pillow` Python Imaging Library that adds support for opening, manipulating, and saving many 
     different image file formats. We use it for the changes in the account picture size and cropping.
 - **Mail:** `pip install flask-mail` This is a email handler which handles the flask reset password email.
-- **Eventlet:** `pip install eventlet` This is since we'll be using the async feature hence a server with async support is needed
-- **Flask_SocketIO** `pip install flask-socketio` Sockets allows realtime/async application to communicate in Full Duplex.
     
 ### SQLite
 It is an easy to use simple SQL database preinstalled with python. We are using a object relational mapper (SQLAlchemy)
