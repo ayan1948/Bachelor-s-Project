@@ -11,7 +11,7 @@ from WebApp.models import User, Test
 from WebApp.forms import RegistrationForm, LoginForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm, \
     StartTestForm, ReviewTestForm
 from flask_login import login_user, current_user, logout_user, login_required
-from mock import ScopeManager
+from scope_manager import ScopeManager
 from scaling import scale
 
 
