@@ -66,17 +66,17 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 
-class StartTestForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired(), Length(min=2, max=20), Regexp(r'^[\w.@+-]+$')])
-    description = TextAreaField('Description', validators=[Length(max=200)])
-    iteration = IntegerField('Iterations', validators=[DataRequired()])
-    ch1 = BooleanField('Channel 1', default=False)
-    ch2 = BooleanField('Channel 2', default=False)
-    ch3 = BooleanField('Channel 3', default=False)
-    ch4 = BooleanField('Channel 4', default=False)
-    start = SubmitField('Start')
-    stop = SubmitField('Stop')
-    connect = SubmitField('Connect')
+# class StartTestForm(FlaskForm):
+#     title = StringField('Title', validators=[DataRequired(), Length(min=2, max=20), Regexp(r'^[\w.@+-]+$')])
+#     description = TextAreaField('Description', validators=[Length(max=200)])
+#     iteration = IntegerField('Iterations', validators=[DataRequired()])
+#     ch1 = BooleanField('Channel 1', default=False)
+#     ch2 = BooleanField('Channel 2', default=False)
+#     ch3 = BooleanField('Channel 3', default=False)
+#     ch4 = BooleanField('Channel 4', default=False)
+#     start = SubmitField('Start')
+#     stop = SubmitField('Stop')
+#     connect = SubmitField('Connect')
 
 
 class ReviewTestForm(FlaskForm):

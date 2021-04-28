@@ -38,4 +38,3 @@ class ScopeManager(Scope):
 
     def acquire(self):
         sleep(2)
-        pass

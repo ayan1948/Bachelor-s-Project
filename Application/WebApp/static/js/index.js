@@ -44,7 +44,7 @@ function update_checkbox() {
   } else channels.forEach((check) => (check.disabled = true));
 }
 
-let colorNames = Object.keys(window.chartColors);
+let colorNames = ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56'];
 
 function get_label_for_channel_and_option(option, channel_index) {
   return option + " Ch: " + (channel_index + 1);
@@ -128,7 +128,7 @@ function graph() {
 function addToChartDataset(data, labelText, checked) {
   const colorName =
     colorNames[chartConfig.data.datasets.length % colorNames.length];
-  const color = window.chartColors[colorName];
+  const color = colorName;
   chartConfig.data.datasets.push({
     label: labelText,
     backgroundColor: color,

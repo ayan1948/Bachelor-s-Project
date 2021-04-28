@@ -11,18 +11,7 @@ libraries which are engulfed or could be downloaded along side with the framewor
       {% <Code Block> %}
     
     **_PACKAGES INSTALLED_**
-- **WTForms:** `pip install flask-wtf` Already made form which translates into HTML using Jinja2 and also renders CSS 
-    tag's as for the design.
-- **SQLAlchemy:** `pip install flask-sqlalchemy` It is an object relational mapper, accessing database in an object
-    oriented manner.
-- **Bcrypt:** `pip install flask-bcrypt` It is an hashing algorithm, for password protection. We only stores the hash of
-    of the passwords written into the database.
-- **email-validator:** `pip install email-validator` its a package which validates emails.
-- **Login Manager:** `pip install flask-login` This creates the unique session for the user in the dashboard. Also,
-    prevents program from loading multiple session in the app from the same service. Registers logging in and out.
-- **Pillow:** `pip install pillow` Python Imaging Library that adds support for opening, manipulating, and saving many 
-    different image file formats. We use it for the changes in the account picture size and cropping.
-- **Mail:** `pip install flask-mail` This is a email handler which handles the flask reset password email.
+- **Requirements** `pip install requirements.txt` from Application folder. 
     
 ### SQLite
 It is an easy to use simple SQL database preinstalled with python. We are using a object relational mapper (SQLAlchemy)

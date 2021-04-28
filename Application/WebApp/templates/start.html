@@ -4,68 +4,43 @@
 
     </div>
     <div class="content-section">
-        <form onsubmit="return false;">
-            {% if device %}
-                <fieldset class="form-group">
-                    <legend class="border-bottom mb-4">Start your Test</legend>
-                    <div class="form-group">
-                        {{ form.title.label(class="form-control-label") }}
-                        {% if form.title.errors %}
-                            {{ form.title(class="form-control form-control-lg is-invalid") }}
-                            <div class="invalid-feedback">
-                                {% for error in form.title.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            {{ form.title(class="form-control form-control-lg") }}
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        {{ form.description.label(class="form-control-label") }}
-                        {% if form.description.errors %}
-                            {{ form.description(class="form-control form-control-lg is-invalid") }}
-                            <div class="invalid-feedback">
-                                {% for error in form.description.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            {{ form.description(class="form-control form-control-lg") }}
-                        {% endif %}
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="iteration" type="number">Iterations</label>
-                        <input class="form-control form-control-lg" id="iteration" name="iteration" required="" type="number" value="">
-                    </div>
-                    <div class="form-check">
-                        {{ form.ch1(class="form-check-input") }}
-                        {{ form.ch1.label(class="form-check-label") }}
-                    </div>
-                    <div class="form-check">
-                        {{ form.ch2(class="form-check-input") }}
-                        {{ form.ch2.label(class="form-check-label") }}
-                    </div>
-                    <div class="form-check">
-                        {{ form.ch3(class="form-check-input") }}
-                        {{ form.ch3.label(class="form-check-label") }}
-                    </div>
-                    <div class="form-check">
-                        {{ form.ch4(class="form-check-input") }}
-                        {{ form.ch4.label(class="form-check-label") }}
-                    </div>
-                </fieldset>
-
+        <form>
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Start your Test</legend>
                 <div class="form-group">
-                    {{ form.start(class="btn btn-success") }}
-                    {{ form.stop(class="btn btn-danger") }}
+                    <label class="form-control-label" for="title">Title</label>
+                    <input class="form-control form-control-lg" id="title" name="title" required type="text" value="">
                 </div>
-            {% else %}
-                <h3>Please try connecting again or Check for errors</h3>
                 <div class="form-group">
-                    {{ form.connect(class="btn btn-info") }}
-                </div>      
-            {% endif %}
+                    <label class="form-control-label" for="description">Description</label>
+                    <textarea class="form-control form-control-lg" id="description" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" for="iteration" type="number">Iterations</label>
+                    <input class="form-control form-control-lg" id="iteration" name="iteration" required="" type="number" value="">
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="ch1" name="ch1" type="checkbox" value="y">
+                    <label class="form-check-label" for="ch1">Channel 1</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="ch2" name="ch2" type="checkbox" value="y">
+                    <label class="form-check-label" for="ch2">Channel 2</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="ch3" name="ch3" type="checkbox" value="y">
+                    <label class="form-check-label" for="ch3">Channel 3</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="ch4" name="ch4" type="checkbox" value="y">
+                    <label class="form-check-label" for="ch4">Channel 4</label>
+                </div>
+            </fieldset>
+
+            <div class="form-group">
+                <input class="btn btn-success" id="start" name="start" type="submit" value="Start">
+                <input class="btn btn-danger" id="stop" name="stop" type="submit" value="Stop">
+            </div>
         </form>
     </div>
 {% endblock content %}
@@ -73,17 +48,16 @@
 {% block sidebar %}
     <div class="content-section" id="progress">
         <div class="progress">
-            <div class="progress-bar progress-bar-striped bg-steel progress-bar-animated" id="prg" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+            <div class="progress-bar progress-bar-striped bg-steel progress-bar-animated" id="prg" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style=""></div>
         </div>
         <p class='text-muted'>Captures: <span id="timing"></span></p>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script>
         const socket = io()
-        socket.on('connect', function() {
+        socket.on('connect', () => {
             socket.emit('connection', {data: 'I am connected!'});
         });
-
 
         const progress = document.getElementById("progress")
         let prg = document.getElementById("prg")
@@ -113,18 +87,18 @@
             pause.disabled = true
 
             start.onclick = () => {
-            alertHandler()
-            form['title'] = title.value
-            form['description'] = description.value
-            form['iterations'] = parseInt(iterations.value)
-            form['ch1'] = channels[0].checked
-            form['ch2'] = channels[1].checked
-            form['ch3'] = channels[2].checked
-            form['ch4'] = channels[3].checked
-            disabler(true, false)
-            form['start'] = true
-            form['stop'] = false
-            socket.emit('form', JSON.stringify(form))
+                alertHandler()
+                form['title'] = title.value
+                form['description'] = description.value
+                form['iterations'] = parseInt(iterations.value)
+                form['ch1'] = channels[0].checked
+                form['ch2'] = channels[1].checked
+                form['ch3'] = channels[2].checked
+                form['ch4'] = channels[3].checked
+                disabler(true, false)
+                form['start'] = true
+                form['stop'] = false
+                socket.emit('form', JSON.stringify(form))
             }
 
             pause.onclick = () => {
@@ -138,7 +112,7 @@
         {% else %}
             let connect = document.getElementById("connect")
 
-            connect.onclick = () =>{
+            connect.onclick = () => {
                 form['connect'] = true
                 form['start'] = false
                 form['stop'] = false
@@ -147,9 +121,9 @@
         {% endif %}
 
         socket.on('result', data => {
-            let value = (data['range']/parseInt(iterations.value))*100
-            prg.style.width= value.toString() +"%"
-            timing.textContent = (data['range']/parseInt(iterations.value)).toString()
+            let count = (data/parseInt(iterations.value))*100
+            prg.style.width= count + "%"
+            timing.textContent = iterations.value + (data/parseInt(iterations.value)).toString()
         })
 
         socket.on('status', result => {

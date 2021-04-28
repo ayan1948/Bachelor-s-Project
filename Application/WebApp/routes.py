@@ -1,7 +1,6 @@
 import os
 import secrets
 import json
-import multiprocessing
 from zipfile import ZipFile
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, send_from_directory, abort
@@ -9,9 +8,9 @@ from flask_socketio import emit
 from WebApp import app, db, bcrypt, socketio  # , mail
 from WebApp.models import User, Test
 from WebApp.forms import RegistrationForm, LoginForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm, \
-    StartTestForm, ReviewTestForm
+     ReviewTestForm
 from flask_login import login_user, current_user, logout_user, login_required
-from scope_manager import ScopeManager
+from mock import ScopeManager
 from scaling import scale
 
 
@@ -153,16 +152,16 @@ def response(initial):
 @socketio.on('form')
 def capture(form):
     form = json.loads(form)
-    print(form)
+    # print(form)
     if form["start"]:
         try:
             device.set_title(form["title"])
             device.set_channel([form["ch1"], form["ch2"], form["ch3"], form["ch4"]])
             device.initialize()
             for i in range(form["iterations"]):
-                device.reinitialize()
                 device.acquire()
-                emit('result', {'range': i})
+                emit('result', i + 1)
+                device.reinitialize()
             data = Test(title=form["title"], description=form["description"], iteration=form["iterations"],
                         ch1=form["ch1"], ch2=form["ch2"], ch3=form["ch3"], ch4=form["ch4"],
                         author=current_user)
@@ -187,8 +186,7 @@ def capture(form):
 @login_required
 def start():
     connect()
-    form = StartTestForm()
-    return render_template('start.html', title='start', form=form, device=device)
+    return render_template('start.html', title='start', device=device)
 
 
 @app.route('/review/<test>/<case>', methods=['GET', 'POST'])
