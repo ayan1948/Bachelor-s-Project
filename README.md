@@ -23,4 +23,4 @@ is later handle by a webservice client running the control dashboard, all done o
 > - 64-Bit Ubuntu Desktop 16.04.x and 18.04.x
 
 ### Starting the Application
-Install the libraries from the /Application/requirements.txt and then run `app.py`.
+Install all the libraries from the /Application/requirements.txt with `pip install requirements.txt` and then run `python app.py` to run Flask.
