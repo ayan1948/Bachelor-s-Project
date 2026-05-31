@@ -5,7 +5,7 @@ from typing import Annotated, List, Optional
 import uvicorn
 from datetime import timedelta
 from fastapi.responses import FileResponse, JSONResponse
-import os
+from pathlib import Path
 import json
 from zipfile import ZipFile
 import shutil
@@ -117,10 +117,10 @@ async def update_user_me(
         import secrets
         from PIL import Image
         random_hex = secrets.token_hex(8)
-        _, f_ext = os.path.splitext(picture.filename)
-        picture_fn = random_hex + f_ext
-        picture_path = os.path.join('static', 'profile_pics', picture_fn)
-        os.makedirs(os.path.dirname(picture_path), exist_ok=True)
+        f_ext = Path(picture.filename).suffix
+        picture_fn = f"{random_hex}{f_ext}"
+        picture_path = Path('static') / 'profile_pics' / picture_fn
+        picture_path.parent.mkdir(parents=True, exist_ok=True)
         
         output_size = (125, 125)
         i = Image.open(picture.file)
@@ -135,8 +135,8 @@ async def update_user_me(
 def read_user_tests(current_user: Annotated[models.User, Depends(get_current_active_user)], db: Session = Depends(get_db)):
     tests = db.query(models.Test).filter(models.Test.user_id == current_user.id).all()
     for t in tests:
-        directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results', t.title))
-        t.items = os.listdir(directory) if os.path.isdir(directory) else []
+        directory = Path.cwd().parent / 'results' / t.title
+        t.items = [f.name for f in directory.iterdir()] if directory.is_dir() else []
     return tests
 
 @app.put("/tests/{test_id}", response_model=schemas.Test)
@@ -153,11 +153,11 @@ def update_test(
     try:
         old_title = db_test.title
         new_title = test_update.title
-        results_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'results'))
-        if os.path.exists(os.path.join(results_dir, old_title)):
-            os.rename(os.path.join(results_dir, old_title), os.path.join(results_dir, new_title))
-        if os.path.exists(os.path.join(results_dir, f"computed_{old_title}")):
-            os.rename(os.path.join(results_dir, f"computed_{old_title}"), os.path.join(results_dir, f"computed_{new_title}"))
+        results_dir = Path.cwd().parent / 'results'
+        if (results_dir / old_title).exists():
+            (results_dir / old_title).rename(results_dir / new_title)
+        if (results_dir / f"computed_{old_title}").exists():
+            (results_dir / f"computed_{old_title}").rename(results_dir / f"computed_{new_title}")
     except Exception as e:
         print(e)
     
@@ -167,8 +167,8 @@ def update_test(
     db.commit()
     db.refresh(db_test)
     
-    directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results', db_test.title))
-    db_test.items = os.listdir(directory) if os.path.isdir(directory) else []
+    directory = Path.cwd().parent / 'results' / db_test.title
+    db_test.items = [f.name for f in directory.iterdir()] if directory.is_dir() else []
     return db_test
 
 @app.delete("/tests/{test_id}")
@@ -182,12 +182,12 @@ def delete_test(
         raise HTTPException(status_code=404, detail="Test not found")
     
     try:
-        directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results'))
-        test_dir = os.path.join(directory, f"{db_test.title}")
-        comp_dir = os.path.join(directory, f"computed_{db_test.title}")
-        if os.path.exists(test_dir):
+        directory = Path.cwd().parent / 'results'
+        test_dir = directory / f"{db_test.title}"
+        comp_dir = directory / f"computed_{db_test.title}"
+        if test_dir.exists():
             shutil.rmtree(test_dir)
-        if os.path.exists(comp_dir):
+        if comp_dir.exists():
             shutil.rmtree(comp_dir)
     except Exception as e:
         print(e)
@@ -198,9 +198,9 @@ def delete_test(
 
 @app.get('/review/{test}/{case}')
 def get_plots(test: str, case: str):
-    file = f"../results/computed_{test}/{case}.json"
-    if os.path.exists(file):
-        with open(file) as f:
+    file_path = Path("..") / "results" / f"computed_{test}" / f"{case}.json"
+    if file_path.exists():
+        with file_path.open() as f:
             data = json.load(f)
         return data
     else:
@@ -208,18 +208,18 @@ def get_plots(test: str, case: str):
 
 @app.get("/get_plot/{item:path}")
 def get_plot_zip(item: str):
-    directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results'))
-    zip_path = os.path.join(directory, f"{item}.zip")
-    item_dir = os.path.join(directory, item)
+    directory = Path.cwd().parent / 'results'
+    zip_path = directory / f"{item}.zip"
+    item_dir = directory / item
     
-    if os.path.isfile(zip_path):
+    if zip_path.is_file():
         return FileResponse(zip_path, media_type='application/zip', filename=f"{item}.zip")
-    elif os.path.isdir(item_dir):
-        files = os.listdir(item_dir)
+    elif item_dir.is_dir():
+        files = [f.name for f in item_dir.iterdir()]
         try:
             with ZipFile(zip_path, 'w') as zipf:
                 for file in files:
-                    zipf.write(os.path.join(item_dir, file), arcname=file)
+                    zipf.write(item_dir / file, arcname=file)
             return FileResponse(zip_path, media_type='application/zip', filename=f"{item}.zip")
         except Exception as e:
             print(e)

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 import math
 from time import sleep
 
@@ -34,8 +34,8 @@ class ScopeManager(Scope):
 
     def initialize(self):
         self.current_iteration = 0
-        directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results'))
-        os.makedirs(os.path.join(directory, self.title), exist_ok=True)
+        directory = Path.cwd().parent / 'results'
+        (directory / self.title).mkdir(parents=True, exist_ok=True)
 
     def reinitialize(self):
         pass
@@ -44,12 +44,12 @@ class ScopeManager(Scope):
         sleep(0.5)  # Simulate hardware acquisition time
         self.current_iteration += 1
         
-        directory = os.path.abspath(os.path.join(os.getcwd(), '..', 'results'))
-        filename = os.path.join(directory, self.title, f"{self.title}_{self.current_iteration}.csv")
+        directory = Path.cwd().parent / 'results'
+        filename = directory / self.title / f"{self.title}_{self.current_iteration}.csv"
         
         # Write 200 data points of simulated wave forms:
         # Format: time, ch1, ch2, ch3, ch4
-        with open(filename, "w") as f:
+        with filename.open("w") as f:
             for idx in range(200):
                 t = -0.01 + (idx * 0.0001)
                 

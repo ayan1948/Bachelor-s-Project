@@ -1,10 +1,10 @@
 import visa
 import sys
-import time
 import RPi.GPIO as GPIO
 import json
 import numpy as np
-import os
+from pathlib import Path
+import time
 
 GLOBAL_TOUT = 1000
 GPIO_TIMEOUT = 2
@@ -12,6 +12,7 @@ errorCode = -1
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(11, GPIO.OUT)
 
+FILE = Path(__file__).parent
 
 class Scope:
     def __init__(self):
@@ -28,9 +29,9 @@ class Scope:
 
         try:
             self.KsInfiniiVisionX = rm.open_resource(SCOPE_VISA_ADDRESS)
-            print("Connection established with " + str(self.KsInfiniiVisionX.query("*IDN?")))
+            print(f"Connection established with {self.KsInfiniiVisionX.query('*IDN?')}")
         except Exception:
-            print(f"Unable to connect to oscilloscope at " + str(SCOPE_VISA_ADDRESS) + ". Aborting script.")
+            print(f"Unable to connect to oscilloscope at {SCOPE_VISA_ADDRESS}. Aborting script.")
             sys.exit()
 
     def error_check(self):
@@ -42,7 +43,7 @@ class Scope:
             errorCode = int(errorParts[0])
             errorMessage = errorParts[1].rstrip('\n')
 
-            print('INSTRUMENT ERROR - Error code: %d, error message: %s' % (errorCode, errorMessage))
+            print(f'INSTRUMENT ERROR - Error code: {errorCode}, error message: {errorMessage}')
 
     def save_setup(self):
         Setup = self.KsInfiniiVisionX.query_binary_values(":SYStem:SETup?", datatype="B", is_big_endian=False)
@@ -64,7 +65,7 @@ class Scope:
 
 
 class ScopeManager(Scope):
-    def __init__(self, channels=0, title=""):
+    def __init__(self, channels: tuple[int, ...]=(), title=""):
         super().__init__()
         self.channels = channels
         self.title = title
@@ -84,8 +85,8 @@ class ScopeManager(Scope):
         self.KsInfiniiVisionX.write(":WAVeform:UNSigned 0")
         for channel in range(4):
             if self.channels[channel] == 1:
-                self.KsInfiniiVisionX.write(":CHANnel" + str(channel + 1) + ":DISPlay ON")
-                self.KsInfiniiVisionX.write(":WAVeform:SOURce" + str(channel + 1))
+                self.KsInfiniiVisionX.write(f":CHANnel{channel + 1}:DISPlay ON")
+                self.KsInfiniiVisionX.write(f":WAVeform:SOURce{channel + 1}")
         self.KsInfiniiVisionX.write(":WAVeform:POINts NORMal")
         self.KsInfiniiVisionX.chunk_size = 20480
 
@@ -96,7 +97,7 @@ class ScopeManager(Scope):
         for channel in range(4):
             if self.channels[channel] == 1:
                 Pre = self.KsInfiniiVisionX.query(
-                    ":WAVeform:SOURce CHANnel" + str(channel + 1) + ";:WAVeform:PREamble?").split(',')
+                    f":WAVeform:SOURce CHANnel{channel + 1};:WAVeform:PREamble?").split(',')
                 self.Y_INCrement.append(float(Pre[7]))
                 self.Y_ORIGin.append(float(Pre[8]))
                 self.Y_REFerence.append(float(Pre[9]))
@@ -115,7 +116,7 @@ class ScopeManager(Scope):
         if float(Pre[1]) == "PEAK":
             self.DataTime = np.repeat(self.DataTime, 2)
 
-        os.mkdir(f'../results/{self.title}')
+        (FILE / "results" / self.title).mkdir(parents=True, exist_ok=True)
 
     def reinitialize(self):
         print("Reinitializing the Scope for Capture")
@@ -155,14 +156,14 @@ class ScopeManager(Scope):
                 if self.channels[channel] == 1:
                     Data_all.append(np.array(
                         self.KsInfiniiVisionX.query_binary_values(
-                            ':WAVeform:SOURce CHANnel' + str(channel + 1) + ';DATA?', datatype="h",
+                            f':WAVeform:SOURce CHANnel{channel + 1};DATA?', datatype="h",
                             is_big_endian=False)).round(decimals=3))
                     Data_all[channel] = ((Data_all[channel] - self.Y_REFerence[channel]) * self.Y_INCrement[channel]) + \
                                         self.Y_ORIGin[channel]
                 else:
                     Data_all.append(None)
 
-            filename = os.path.join(f'../results/{self.title}', f"{self.title}_{time.strftime('%Y%m%d')}.csv")
+            filename = FILE / "results" / self.title / f"{self.title}_{time.strftime('%Y%m%d')}.csv"
 
             data = np.array((self.DataTime, Data_all[0], Data_all[1], Data_all[2], Data_all[3]))
             np.savetxt(filename, data.T, delimiter=',')

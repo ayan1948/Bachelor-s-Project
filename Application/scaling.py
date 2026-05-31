@@ -1,13 +1,17 @@
 import csv
 import json
-import os
+from pathlib import Path
 import re
 
 
 def scale(title):
-    files = os.listdir(f"../results/{title}")
+    results_path = Path("..") / "results"
+    test_dir = results_path / title
+    computed_dir = results_path / f"computed_{title}"
+    
+    files = list(test_dir.iterdir())
     try:
-        os.mkdir(f"../results/computed_{title}")
+        computed_dir.mkdir(exist_ok=True)
     finally:
         dic = {
             "ch1": [],
@@ -17,23 +21,23 @@ def scale(title):
         time = []
         regex = re.compile(r"(-?\d+\.\d{2})\d+(e[-|+]\d{2})")
 
-        with open(f"../results/{title}/{files[0]}", 'r') as csv_file:
+        with (test_dir / files[0].name).open('r') as csv_file:
             csv_reader = csv.reader(csv_file)
             length = sum(1 for _ in csv_reader) / 200
 
-        with open(f"../results/{title}/{files[0]}", 'r') as csv_file:
+        with (test_dir / files[0].name).open('r') as csv_file:
             csv_reader = csv.reader(csv_file)
-            with open(f"../results/computed_{title}/time.json", 'w') as new_file:
+            with (computed_dir / "time.json").open('w') as new_file:
                 for i, line in enumerate(csv_reader):
                     if i % length == 0:
                         time.append(regex.sub(r'\1\2', line[0]))
                 json.dump({'time': time}, new_file)
 
-        for file in files:
-            f, _ = os.path.splitext(file)
-            with open(f"../results/{title}/{file}", 'r') as csv_file:
+        for file_path in files:
+            stem = file_path.stem
+            with file_path.open('r') as csv_file:
                 csv_reader = csv.reader(csv_file)
-                with open(f"../results/computed_{title}/{f}.json", 'w') as new_file:
+                with (computed_dir / f"{stem}.json").open('w') as new_file:
                     # csv_writer = csv.writer(new_file)
                     for i, line in enumerate(csv_reader):
                         if i % length == 0:
